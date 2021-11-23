@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const CONTRACT_NAME = "GameStateToken";    // Change contract name here
+const CONTRACT_NAME = "GamestateToken";    // Change contract name here
 
 const OwnerWallet = "0x8124c6Af26f52631C9425679e422f84a2E176322";
 
@@ -9,13 +9,21 @@ async function main() {
     console.log("Balance:", (await deployer.getBalance()).toString());
     const factory = await hre.ethers.getContractFactory(CONTRACT_NAME);
     console.log("Deploying " + CONTRACT_NAME + "...");
+
+    // Provide constructor parameters here
     const token = {
-        name: "Game state",
+        name: "Gamestate",
         symbol: "STATE",
         totalSupply: web3.utils.toWei("10000000000", "ether"),
         ownerAddress: "0x8124c6Af26f52631C9425679e422f84a2E176322"
     }
-    const contract = await factory.deploy(OwnerWallet);    // Provide constructor parameters here
+
+    const contract = await factory.deploy(
+        token.name,
+        token.symbol,
+        token.totalSupply,
+        token.ownerAddress
+    );
     await contract.deployed();
     console.log(`${CONTRACT_NAME} deployed address: ${contract.address}`);
 

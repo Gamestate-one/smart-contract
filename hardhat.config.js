@@ -10,14 +10,15 @@ const MNEMONIC = process.env.MNEMONIC;
 const INFURA_HTTP_LINK = process.env.INFURA_HTTP_LINK;
 const INFURA_API_KEY = process.env.INFURA_API_KEY;
 const BSC_API_KEY = process.env.BSC_API_KEY;
+const POLYGON_API_KEY = process.env.POLYGON_API_KEY;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 const ADDRESS_1 = process.env.ADDRESS_1;
 const BSC_PROVIDER = process.env.BSC_PROVIDER;
 const BSC_TESTNET_PROVIDER = process.env.BSC_TESTNET_PROVIDER;
 const DEFENDER_TEAM_API_KEY = process.env.DEFENDER_TEAM_API_KEY;
 const DEFENDER_TEAM_API_SECRET_KEY = process.env.DEFENDER_TEAM_API_SECRET_KEY;
-const MATIC_PROVIDER = process.env.MATIC_PROVIDER;
-const MATIC_TESTNET_PROVIDER = process.env.MATIC_TESTNET_PROVIDER;
+const POLYGON_PROVIDER = process.env.POLYGON_PROVIDER;
+const POLYGON_TESTNET_PROVIDER = process.env.POLYGON_TESTNET_PROVIDER;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -59,22 +60,22 @@ module.exports = {
       accounts: { mnemonic: MNEMONIC },
       from: ADDRESS_1
     },
-    matic: {
-      url: MATIC_PROVIDER,
+    polygon: {
+      url: POLYGON_PROVIDER,
       chainId: 137,
       accounts: { mnemonic: MNEMONIC }
     },
-    matictest: {
-      url: MATIC_TESTNET_PROVIDER,
+    polygontest: {
+      url: POLYGON_TESTNET_PROVIDER,
       chainId: 80001,
       accounts: { mnemonic: MNEMONIC }
     }
   },
   etherscan: {
-    apiKey: BSC_API_KEY
+    apiKey: "r0e9p5sgBc5XIwU6pdGlkAARTdTBWXfR"
   },
   solidity: {
-    version: "0.8.6",
+    version: "0.8.7",
     settings: {
       optimizer: {
         enabled: true,
