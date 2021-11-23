@@ -1,0 +1,10 @@
+node_modules
+.vscode
+build
+bin
+truffle-config.js
+migrations/2_deploy_contract.js
+.secret.json
+artifacts
+cache
+.env
