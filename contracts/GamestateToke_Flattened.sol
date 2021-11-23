@@ -701,6 +701,7 @@ pragma solidity ^0.8.0;
 
 contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
     mapping(address => bool) private operators;
+    address[] public listOperators;
 
     constructor(
         string memory _name,
@@ -710,7 +711,10 @@ contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
     ) Ownable() ERC20(_name, _symbol) ERC20Capped(_totalSupply) {
         Ownable.transferOwnership(ownerAddress);
         operators[ownerAddress] = true;
+        listOperators.push(ownerAddress);
     }
+
+    event Operator(address operator, bool isOperator);
 
     modifier onlyOperator() {
         require(operators[msg.sender], "only-operator");
@@ -731,5 +735,40 @@ contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
 
     function setOperator(address _operator, bool isOperator) public onlyOwner {
         operators[_operator] = isOperator;
+
+        (bool isOperatorBefore, uint256 indexInArr) = checkExistsInArray(
+            listOperators,
+            _operator
+        );
+
+        if (isOperator && !isOperatorBefore) {
+            listOperators.push(_operator);
+        }
+        if (!isOperator && isOperatorBefore) {
+            removeOutOfArray(listOperators, indexInArr);
+        }
+        emit Operator(_operator, isOperator);
+    }
+
+    function getListOperators() public view returns (address[] memory) {
+        return listOperators;
+    }
+
+    function checkExistsInArray(address[] memory arr, address _address)
+        internal
+        pure
+        returns (bool isExist, uint256 index)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == _address) {
+                isExist = true;
+                index = i;
+            }
+        }
+    }
+
+    function removeOutOfArray(address[] storage arr, uint256 index) internal {
+        arr[index] = arr[arr.length - 1];
+        arr.pop();
     }
 }
