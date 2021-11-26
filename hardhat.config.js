@@ -68,11 +68,12 @@ module.exports = {
     polygontest: {
       url: POLYGON_TESTNET_PROVIDER,
       chainId: 80001,
+      gas: 8000000,
       accounts: { mnemonic: MNEMONIC }
     }
   },
   etherscan: {
-    apiKey: "r0e9p5sgBc5XIwU6pdGlkAARTdTBWXfR"
+    apiKey: POLYGON_API_KEY
   },
   solidity: {
     version: "0.8.7",

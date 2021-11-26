@@ -1,7 +1,5 @@
 const hre = require("hardhat");
-const CONTRACT_NAME = "GamestateToken";    // Change contract name here
-
-const OwnerWallet = "0x8124c6Af26f52631C9425679e422f84a2E176322";
+const CONTRACT_NAME = "QuantumAccelerator";    // Change contract name here
 
 async function main() {
     const [deployer] = await hre.ethers.getSigners();
@@ -11,16 +9,14 @@ async function main() {
     console.log("Deploying " + CONTRACT_NAME + "...");
 
     // Provide constructor parameters here
-    const token = {
-        name: "Gamestate",
-        symbol: "STATE",
-        ownerAddress: "0x8124c6Af26f52631C9425679e422f84a2E176322"
+    const nft = {
+        name: "Quantum Accelerator",
+        symbol: "QA"
     }
 
     const contract = await factory.deploy(
-        token.name,
-        token.symbol,
-        token.ownerAddress
+        nft.name,
+        nft.symbol
     );
     await contract.deployed();
     console.log(`${CONTRACT_NAME} deployed address: ${contract.address}`);

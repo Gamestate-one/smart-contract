@@ -1,0 +1,4 @@
+module.exports = {
+    PROXY_ADDRESS: "0xD693aAd61B76F1bff2FAF6aA1538fe4102eA4BB9",
+    LOGIC_ADDRESS: ""
+}
