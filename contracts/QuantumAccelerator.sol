@@ -47,6 +47,21 @@ contract QuantumAccelerator is
         emit MintNFT(to, tokenId);
     }
 
+    function getOwnedTokenIds(address _address)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256 numNFTs = balanceOf(_address);
+        if (numNFTs == 0) return new uint256[](0);
+        else {
+            uint256[] memory ownedtokenIds = new uint256[](numNFTs);
+            for (uint256 i = 0; i < numNFTs; i++)
+                ownedtokenIds[i] = tokenOfOwnerByIndex(_address, i);
+            return ownedtokenIds;
+        }
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,

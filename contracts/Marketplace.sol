@@ -8,15 +8,19 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract NFTSale is
+contract Marketplace is
     UUPSUpgradeable,
     ERC721HolderUpgradeable,
     OwnableUpgradeable,
-    PausableUpgradeable
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable
 {
     using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     struct Information {
         address payable seller;
@@ -27,11 +31,9 @@ contract NFTSale is
     ERC721Upgradeable public erc721Contract;
     mapping(uint256 => Information) private _informationOf;
     mapping(address => bool) private _currencyWhitelist;
-    mapping(address => uint256) private _maxValueOfCurrency;
-    bool public isEveryoneCanSell;
     mapping(address => bool) private _walletCanSell;
-    address payable public receiveFeeWallet;
-    uint256 public feePercent;
+    bool public isEveryoneCanSell;
+    mapping(address => uint256[]) private _listNFTOnSellOf;
 
     event NewProduct(uint256 tokenId, address currency, uint256 price);
     event GetProductBack(uint256 tokenId);
@@ -39,19 +41,26 @@ contract NFTSale is
     event ProductSold(uint256 tokenId, address buyer, uint256 price);
     event WalletCanSell(address wallet, bool isSeller);
     event EveryoneCanSell(bool canSell);
-    event CryptiaNFT721Contract(address cryptiaNFT721Addr);
-    event PaymentCurrency(address currency, bool accepted, uint256 maxValue);
-    event ReceiveFeeWallet(address receiveFeeWallet);
-    event FeePercent(uint256 feePercent);
+    event NFT721Contract(address NFT721Addr);
+    event PaymentCurrency(address currency, bool accepted);
 
     function initialize() public initializer {
         __UUPSUpgradeable_init();
         __ERC721Holder_init();
         __Ownable_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
 
     modifier onlyOwnerToken(uint256 tokenId) {
         require(
@@ -78,45 +87,30 @@ contract NFTSale is
         return (info.seller, info.currency, info.price);
     }
 
-    function checkCurrency(address currency)
+    function getNFTsOnSellOf(address seller)
         public
         view
-        returns (bool, uint256)
+        returns (uint256[] memory)
     {
-        return (_currencyWhitelist[currency], _maxValueOfCurrency[currency]);
+        return _listNFTOnSellOf[seller];
     }
 
-    function setCryptiaNFT721Addr(address cryptiaNFT721Addr) public onlyOwner {
-        require(
-            cryptiaNFT721Addr != address(0) &&
-                cryptiaNFT721Addr != address(this)
-        );
-        erc721Contract = ERC721Upgradeable(cryptiaNFT721Addr);
-        emit CryptiaNFT721Contract(cryptiaNFT721Addr);
+    function checkCurrency(address currency) public view returns (bool) {
+        return (_currencyWhitelist[currency]);
     }
 
-    function setPaymentCurrency(
-        address currency,
-        bool accepted,
-        uint256 maxValue
-    ) public onlyOwner {
-        if (accepted == true) {
-            require(maxValue > 0, "max-value-invalid");
-            _maxValueOfCurrency[currency] = maxValue;
-        }
+    function setNFT721Address(address nft721Address) public onlyOwner {
+        require(nft721Address != address(0) && nft721Address != address(this));
+        erc721Contract = ERC721Upgradeable(nft721Address);
+        emit NFT721Contract(nft721Address);
+    }
+
+    function setPaymentCurrency(address currency, bool accepted)
+        public
+        onlyOwner
+    {
         _currencyWhitelist[currency] = accepted;
-        // erc721Contract._safeMint(address(this), 1);
-        emit PaymentCurrency(currency, accepted, maxValue);
-    }
-
-    function setReceiveFeeWallet(address _receiveFeeWallet) public onlyOwner {
-        receiveFeeWallet = payable(_receiveFeeWallet);
-        emit ReceiveFeeWallet(receiveFeeWallet);
-    }
-
-    function setFeePercent(uint256 _feePercent) public onlyOwner {
-        feePercent = _feePercent;
-        emit FeePercent(feePercent);
+        emit PaymentCurrency(currency, accepted);
     }
 
     function setWalletCanSell(address wallet, bool isSeller) public onlyOwner {
@@ -129,7 +123,7 @@ contract NFTSale is
         emit EveryoneCanSell(isEveryoneCanSell);
     }
 
-    // The owner of an NFT pushes his NFT to our platform for sale
+    // The owner of an NFT pushes their NFT to our platform for sale
     function sellNFT(
         uint256 tokenId,
         address currency,
@@ -148,9 +142,7 @@ contract NFTSale is
         );
         require(_currencyWhitelist[currency], "currency-invalid");
         require(
-            _informationOf[tokenId].price == 0 &&
-                price > 0 &&
-                price <= _maxValueOfCurrency[currency],
+            _informationOf[tokenId].price == 0 && price > 0,
             "price-invalid"
         );
         _informationOf[tokenId] = Information(
@@ -159,6 +151,8 @@ contract NFTSale is
             price
         );
         erc721Contract.safeTransferFrom(msg.sender, address(this), tokenId);
+
+        _listNFTOnSellOf[msg.sender].push(tokenId);
         emit NewProduct(tokenId, currency, price);
     }
 
@@ -168,9 +162,18 @@ contract NFTSale is
         whenNotPaused
         onlyOwnerToken(tokenId)
     {
-        require(_informationOf[tokenId].price > 0);
+        require(_informationOf[tokenId].price > 0, "token-not-exists");
         delete _informationOf[tokenId];
         erc721Contract.safeTransferFrom(address(this), msg.sender, tokenId);
+
+        uint256 indexTokenInArr = getIndexInArray(
+            _listNFTOnSellOf[msg.sender],
+            tokenId
+        );
+        _listNFTOnSellOf[msg.sender] = removeArrayByIndex(
+            _listNFTOnSellOf[msg.sender],
+            indexTokenInArr
+        );
         emit GetProductBack(tokenId);
     }
 
@@ -181,10 +184,7 @@ contract NFTSale is
         onlyOwnerToken(tokenId)
     {
         require(
-            _informationOf[tokenId].price > 0 &&
-                newPrice > 0 &&
-                newPrice <=
-                _maxValueOfCurrency[_informationOf[tokenId].currency],
+            _informationOf[tokenId].price > 0 && newPrice > 0,
             "price-invalid"
         );
         _informationOf[tokenId] = Information(
@@ -206,22 +206,20 @@ contract NFTSale is
             address(this) == erc721Contract.ownerOf(tokenId),
             "token-not-sell"
         );
-        require(_informationOf[tokenId].price > 0);
+        require(_informationOf[tokenId].price > 0, "price-token-invalid");
         address payable seller = _informationOf[tokenId].seller;
-        require(msg.sender != seller);
+        require(msg.sender != seller, "owner-can-not-buy");
         if (_informationOf[tokenId].currency == address(0)) {
-            // Native BNB payment
-            require(msg.value >= _informationOf[tokenId].price);
-            erc721Contract.safeTransferFrom(address(this), msg.sender, tokenId);
-            uint256 realPrice = msg.value;
-            uint256 feePrice = realPrice.mul(feePercent).div(100);
-            uint256 sellerReceive = realPrice.sub(feePrice);
-
-            seller.transfer(sellerReceive);
-            receiveFeeWallet.transfer(feePrice);
+            // Native currency(ETH/BNB/MATIC) payment
+            require(
+                msg.value == _informationOf[tokenId].price,
+                "value-invalid"
+            );
+            (bool success, ) = seller.call{value: msg.value}("");
+            require(success, "fail-trans");
         } else {
-            // BEP20 payment
-            ERC20Upgradeable currencyContract = ERC20Upgradeable(
+            // ERC20 handle
+            IERC20Upgradeable currencyContract = IERC20Upgradeable(
                 _informationOf[tokenId].currency
             );
             require(
@@ -232,23 +230,51 @@ contract NFTSale is
                 currencyContract.allowance(msg.sender, address(this)) >=
                     _informationOf[tokenId].price
             );
-
-            uint256 realPrice = _informationOf[tokenId].price;
-            uint256 feePrice = realPrice.mul(feePercent).div(100);
-            uint256 sellerReceive = realPrice.sub(feePrice);
-
-            currencyContract.transferFrom(msg.sender, seller, sellerReceive);
-
-            currencyContract.transferFrom(
+            currencyContract.safeTransferFrom(
                 msg.sender,
-                receiveFeeWallet,
-                feePrice
+                seller,
+                _informationOf[tokenId].price
             );
-
-            erc721Contract.safeTransferFrom(address(this), msg.sender, tokenId);
         }
+
+        erc721Contract.safeTransferFrom(address(this), msg.sender, tokenId);
+
+        uint256 indexTokenInArr = getIndexInArray(
+            _listNFTOnSellOf[seller],
+            tokenId
+        );
+        _listNFTOnSellOf[seller] = removeArrayByIndex(
+            _listNFTOnSellOf[seller],
+            indexTokenInArr
+        );
 
         emit ProductSold(tokenId, msg.sender, _informationOf[tokenId].price);
         delete _informationOf[tokenId];
+    }
+
+    function getIndexInArray(uint256[] memory listNFT, uint256 tokenId)
+        internal
+        pure
+        returns (uint256 index)
+    {
+        for (uint256 i = 0; i < listNFT.length; i++) {
+            if (tokenId == listNFT[i]) {
+                index = i;
+                return i;
+            }
+        }
+    }
+
+    function removeArrayByIndex(uint256[] storage listWallet, uint256 index)
+        internal
+        returns (uint256[] storage)
+    {
+        require(index <= listWallet.length);
+
+        for (uint256 i = index; i < listWallet.length - 1; i++) {
+            listWallet[i] = listWallet[i + 1];
+        }
+        listWallet.pop();
+        return listWallet;
     }
 }

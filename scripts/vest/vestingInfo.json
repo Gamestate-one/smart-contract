@@ -1,0 +1,114 @@
+[
+    {
+        "wallet": "0xf83fd9bF5B9819b3f9eCa67549F72eA08bB96B93",
+        "startTime": "1577318400",
+        "endTime": "1639526400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "135000000"
+    },
+    {
+        "wallet": "0x54711aC693C8aeed3F42707DBC3a4F2Db4793591",
+        "startTime": "1576886400",
+        "endTime": "1639094400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "10000000"
+    },
+    {
+        "wallet": "0x66045C362a3cBA3b9644EdDF128afe1B48DEc59d",
+        "startTime": "1576800000",
+        "endTime": "1639008000",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "5000000"
+    },
+    {
+        "wallet": "0x060510571Be1d89bd81D8E76dAb5dB57b7DAA2eF",
+        "startTime": "1576713600",
+        "endTime": "1638921600",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "50000000"
+    },
+    {
+        "wallet": "0x6e32503940A2dc7eD60Ef7F40f2045C626a8Fd63",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "25000000"
+    },
+    {
+        "wallet": "0x3368E1C9cF2f5a2A1E8Ff744dCBD2789f51a1F3b",
+        "startTime": "1576022400",
+        "endTime": "1638144000",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x4764Cc79218cD79c7b026bBCC92861AD7B83A236",
+        "startTime": "1576022400",
+        "endTime": "1638144000",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x4a21d0356CCCBb12475f3385948d4E3C34756f18",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "500000"
+    },
+    {
+        "wallet": "0x3259Ed9A66b6Fa98140D4377C878046F57334c65",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x8ef3480335dC1dB888135b26ac99e8aBD2FFDf06",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "500000"
+    },
+    {
+        "wallet": "0xFE9ab01f184d85F1c8BfB31EAFf8B6A3EaF63140",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x884Ad1A474319dd5fE274808b1d16dD6a94a88a7",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x6cF77c4EaA3f9A2449643D5Efa1D0C43583459F2",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x49BFdC10B4eF4170bB2e8A5D0E9f58aadf2705f5",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x4b338551D16E59a9b978be8e31E3C7b9119c0dC8",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    },
+    {
+        "wallet": "0x995fBf43321aD90A6FFD944ABD2CD00514B39808",
+        "startTime": "1576108800",
+        "endTime": "1638230400",
+        "timeIncrease": "86400",
+        "maxSupplyClaim": "1000000"
+    }
+]

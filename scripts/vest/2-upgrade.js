@@ -2,7 +2,7 @@ require('@nomiclabs/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 
 const hre = require("hardhat");
-const PROXY_ADDRESS = "0xa3EA8f188cb908CC07AEB23D1E1acD9bA82F5A55";
+const PROXY_ADDRESS = "0x31E34eD544De1A049905D9b3e0Dd3cAD1137F3eA";
 const CONTRACT_NAME_V1 = "Vesting";
 const CONTRACT_NAME_V2 = "Vesting";
 

@@ -12,8 +12,8 @@ async function main() {
 
     // Provide constructor parameters here
     const token = {
-        name: "Gamestate",
-        symbol: "STATE",
+        name: "USD Coin",
+        symbol: "USDC",
         ownerAddress: "0x8124c6Af26f52631C9425679e422f84a2E176322"
     }
 

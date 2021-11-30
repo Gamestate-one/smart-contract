@@ -97,21 +97,20 @@ contract Vesting is
         );
     }
 
-    function claim(address _address, uint256 _amount) public {
+    function claim(address _address, int256 _amount) public {
         VestingInformation storage vest = vests[_address];
-        require(vest.startTime > 0, "not-exists");
         uint256 supplyCanClaim = getSupplyCanClaim(_address);
         int256 i = -1;
-        if (bytes32(_amount) == bytes32(abi.encodePacked(i))) {
+        if (bytes32(uint256(_amount)) == bytes32(abi.encodePacked(i))) {
             gamestateToken.mint(_address, supplyCanClaim);
             vest.totalClaimed = vest.totalClaimed.add(supplyCanClaim);
-            _amount = supplyCanClaim;
+            _amount = int256(supplyCanClaim);
         } else {
-            require(_amount <= supplyCanClaim, "amount-invalid");
-            gamestateToken.mint(_address, _amount);
-            vest.totalClaimed = vest.totalClaimed.add(_amount);
+            require(uint256(_amount) <= supplyCanClaim, "amount-invalid");
+            gamestateToken.mint(_address, uint256(_amount));
+            vest.totalClaimed = vest.totalClaimed.add(uint256(_amount));
         }
-        emit Claim(_address, _amount);
+        emit Claim(_address, uint256(_amount));
     }
 
     function getVestingInformation(address _address)
@@ -145,6 +144,11 @@ contract Vesting is
         if (block.timestamp < vests[_address].startTime) {
             supplyCanClaim = 0;
         } else if (block.timestamp < vests[_address].endTime) {
+            if (
+                vests[_address].totalClaimed == vests[_address].maxSupplyClaim
+            ) {
+                return 0;
+            }
             supplyCanClaim = block
                 .timestamp
                 .sub(vests[_address].startTime)

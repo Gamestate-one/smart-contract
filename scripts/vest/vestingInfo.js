@@ -1,0 +1,1 @@
+exports.vestingInfo = require("./vestingInfo.json")
