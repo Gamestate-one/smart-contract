@@ -1,0 +1,7 @@
+/node_modules
+/log
+/tests
+test.js
+.env
+/json
+.secret.json
