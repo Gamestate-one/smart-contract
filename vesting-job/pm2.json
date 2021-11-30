@@ -1,0 +1,8 @@
+{
+    "name": "vesting-job",
+    "script": "index.js",
+    "exec_interpreter": "",
+    "exec_mode": "fork",
+    "error_file" : "/opt/cryptia-backend/vesting-job/error.log",
+    "out_file"   : "/opt/cryptia-backend/vesting-job/infor.log"
+}
