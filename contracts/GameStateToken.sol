@@ -1,24 +1,22 @@
-/* SPDX-License-Identifier: MIT */
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
+contract GamestateToken is ERC20Burnable, Ownable, Pausable {
     mapping(address => bool) private operators;
     address[] public listOperators;
+    bool public isFinishSetupContract;
 
     constructor(
         string memory _name,
         string memory _symbol,
-        uint256 _totalSupply,
         address ownerAddress
-    ) Ownable() ERC20(_name, _symbol) ERC20Capped(_totalSupply) {
+    ) Ownable() ERC20(_name, _symbol) {
         Ownable.transferOwnership(ownerAddress);
-        operators[ownerAddress] = true;
-        listOperators.push(ownerAddress);
     }
 
     event Operator(address operator, bool isOperator);
@@ -28,6 +26,14 @@ contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
         _;
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     function mint(address account, uint256 amount) public onlyOperator {
         _mint(account, amount);
     }
@@ -35,9 +41,21 @@ contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
     function _mint(address account, uint256 amount)
         internal
         virtual
-        override(ERC20, ERC20Capped)
+        override(ERC20)
     {
-        ERC20Capped._mint(account, amount);
+        ERC20._mint(account, amount);
+    }
+
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override
+        whenNotPaused
+        returns (bool)
+    {
+        require(isFinishSetupContract, "contract-not-setup");
+        _transfer(_msgSender(), recipient, amount);
+        return true;
     }
 
     function setOperator(address _operator, bool isOperator) public onlyOwner {
@@ -55,6 +73,10 @@ contract GamestateToken is ERC20Capped, ERC20Burnable, Ownable {
             removeOutOfArray(listOperators, indexInArr);
         }
         emit Operator(_operator, isOperator);
+    }
+
+    function finishSetupContract() public onlyOwner {
+        isFinishSetupContract = true;
     }
 
     function getListOperators() public view returns (address[] memory) {
