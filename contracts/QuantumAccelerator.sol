@@ -21,13 +21,15 @@ contract QuantumAccelerator is
 
     Counters.Counter private _tokenIdCounter;
     mapping(address => bool) private _operators;
+    string private baseURI;
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
     {}
 
     event Operator(address operator, bool isOperator);
-    event MintNFT(address recipient, uint256 tokenId);
+    event Minted(address recipient, uint256 tokenId);
+    event BaseURI(string uri);
 
     modifier onlyOperator() {
         require(_operators[_msgSender()]);
@@ -44,7 +46,7 @@ contract QuantumAccelerator is
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
-        emit MintNFT(to, tokenId);
+        emit Minted(to, tokenId);
     }
 
     function getOwnedTokenIds(address _address)
@@ -95,5 +97,32 @@ contract QuantumAccelerator is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * Override isApprovedForAll to auto-approve OS's proxy contract
+     */
+    function isApprovedForAll(address _owner, address _operator)
+        public
+        view
+        override
+        returns (bool isOperator)
+    {
+        // if OpenSea's ERC721 Proxy Address is detected, auto-return true (Polygon mainnet)
+        if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
+            return true;
+        }
+
+        // otherwise, use the default ERC721.isApprovedForAll()
+        return ERC721.isApprovedForAll(_owner, _operator);
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
+
+    function setBaseURI(string memory uri) public onlyOwner {
+        baseURI = uri;
+        emit BaseURI(uri);
     }
 }
