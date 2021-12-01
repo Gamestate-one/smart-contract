@@ -41,7 +41,7 @@ contract QuantumAccelerator is
         emit Operator(operator, isOperator);
     }
 
-    function _safeMint(address to, string memory uri) public onlyOperator {
+    function safeMint(address to, string memory uri) public onlyOperator {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
