@@ -22,6 +22,7 @@ contract QuantumAccelerator is
     Counters.Counter private _tokenIdCounter;
     mapping(address => bool) private _operators;
     string private baseURI;
+    address[] public listOperators;
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
@@ -36,16 +37,27 @@ contract QuantumAccelerator is
         _;
     }
 
-    function setOperator(address operator, bool isOperator) external onlyOwner {
+    function setOperator(address operator, bool isOperator) public onlyOwner {
         _operators[operator] = isOperator;
+
+        (bool isOperatorBefore, uint256 indexInArr) = checkExistsInArray(
+            listOperators,
+            operator
+        );
+
+        if (isOperator && !isOperatorBefore) {
+            listOperators.push(operator);
+        }
+        if (!isOperator && isOperatorBefore) {
+            removeOutOfArray(listOperators, indexInArr);
+        }
         emit Operator(operator, isOperator);
     }
 
-    function safeMint(address to, string memory uri) public onlyOperator {
+    function safeMint(address to) public onlyOperator {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
         emit Minted(to, tokenId);
     }
 
@@ -62,6 +74,10 @@ contract QuantumAccelerator is
                 ownedtokenIds[i] = tokenOfOwnerByIndex(_address, i);
             return ownedtokenIds;
         }
+    }
+
+    function getListOperators() public view returns (address[] memory) {
+        return listOperators;
     }
 
     function _beforeTokenTransfer(
@@ -124,5 +140,23 @@ contract QuantumAccelerator is
     function setBaseURI(string memory uri) public onlyOwner {
         baseURI = uri;
         emit BaseURI(uri);
+    }
+
+    function checkExistsInArray(address[] memory arr, address _address)
+        internal
+        pure
+        returns (bool isExist, uint256 index)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == _address) {
+                isExist = true;
+                index = i;
+            }
+        }
+    }
+
+    function removeOutOfArray(address[] storage arr, uint256 index) internal {
+        arr[index] = arr[arr.length - 1];
+        arr.pop();
     }
 }
