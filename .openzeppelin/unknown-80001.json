@@ -1582,7 +1582,199 @@
           {
             "contract": "Marketplace",
             "label": "quantumAccelerator",
-            "type": "t_contract(QuantumAccelerator)7431",
+            "type": "t_contract(QuantumAccelerator)6378",
+            "src": "contracts\\Marketplace.sol:31"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "listCurrencyWhitelist",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "contracts\\Marketplace.sol:32"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "_currencyWhitelist",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts\\Marketplace.sol:33"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "_informationOf",
+            "type": "t_mapping(t_uint256,t_struct(Information)4855_storage)",
+            "src": "contracts\\Marketplace.sol:34"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "_walletCanSell",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "contracts\\Marketplace.sol:35"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "isEveryoneCanSell",
+            "type": "t_bool",
+            "src": "contracts\\Marketplace.sol:36"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "_listNFTOnSellOf",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "src": "contracts\\Marketplace.sol:37"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "receiveFeeWallet",
+            "type": "t_address",
+            "src": "contracts\\Marketplace.sol:38"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "_priceMintNFT",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "contracts\\Marketplace.sol:39"
+          }
+        ],
+        "types": {
+          "t_contract(QuantumAccelerator)6378": {
+            "label": "contract QuantumAccelerator"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_struct(Information)4855_storage)": {
+            "label": "mapping(uint256 => struct Marketplace.Information)"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_struct(Information)4855_storage": {
+            "label": "struct Marketplace.Information",
+            "members": [
+              {
+                "label": "seller",
+                "type": "t_address_payable"
+              },
+              {
+                "label": "currency",
+                "type": "t_address"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_address_payable": {
+            "label": "address payable"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "73d93b04788fa1e62eb2da79c8ac7c05b25126aea8fb241bf1fa640b09b00df3": {
+      "address": "0xB937565C7De0c51Fa5AF84569E693b0C70845718",
+      "txHash": "0xf097826913f6defe754c8c166cccaff5efc5c673ff921419508d466988cfcece",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\ERC1967\\ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "ERC721HolderUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\token\\ERC721\\utils\\ERC721HolderUpgradeable.sol:34"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:30"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:21"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:77"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\PausableUpgradeable.sol:28"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\PausableUpgradeable.sol:96"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\ReentrancyGuardUpgradeable.sol:67"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "quantumAccelerator",
+            "type": "t_contract(QuantumAccelerator)7470",
             "src": "contracts\\Marketplace.sol:31"
           },
           {
@@ -1632,10 +1824,22 @@
             "label": "_priceMintNFT",
             "type": "t_mapping(t_address,t_uint256)",
             "src": "contracts\\Marketplace.sol:39"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "maxNFTCanMint",
+            "type": "t_uint256",
+            "src": "contracts\\Marketplace.sol:40"
+          },
+          {
+            "contract": "Marketplace",
+            "label": "supplyNFTMinted",
+            "type": "t_uint256",
+            "src": "contracts\\Marketplace.sol:41"
           }
         ],
         "types": {
-          "t_contract(QuantumAccelerator)7431": {
+          "t_contract(QuantumAccelerator)7470": {
             "label": "contract QuantumAccelerator"
           },
           "t_array(t_address)dyn_storage": {

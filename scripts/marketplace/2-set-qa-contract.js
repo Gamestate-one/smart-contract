@@ -11,7 +11,7 @@ async function main() {
     const factory = await hre.ethers.getContractFactory(CONTRACT_NAME);
     const contract = factory.attach(PROXY_ADDRESS);
     const nftContract = "0x409393a1306cFE8CE00f7dE451e3a67d3db34436";
-    await contract.setNFTContractWhitelist(nftContract, true);
+    await contract.setQuantumAcceleratorAddress(nftContract);
     console.log("Set nft contract address success for: ", nftContract);
 }
 

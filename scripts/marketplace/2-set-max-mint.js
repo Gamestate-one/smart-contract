@@ -7,12 +7,12 @@ const { PROXY_ADDRESS } = require("./config");
 
 async function main() {
     const [deployer] = await hre.ethers.getSigners();
-    console.log("Preparing to set NFT contract...");
+    console.log("Preparing to max supply mint...");
     const factory = await hre.ethers.getContractFactory(CONTRACT_NAME);
     const contract = factory.attach(PROXY_ADDRESS);
-    const nftContract = "0x409393a1306cFE8CE00f7dE451e3a67d3db34436";
-    await contract.setNFTContractWhitelist(nftContract, true);
-    console.log("Set nft contract address success for: ", nftContract);
+    const supply = 1111
+    await contract.setMaxNFTCanMint(supply);
+    console.log("Max supply mint:", supply);
 }
 
 main().then(() => {

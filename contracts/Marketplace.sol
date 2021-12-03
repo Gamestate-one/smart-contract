@@ -6,7 +6,9 @@ import "./QuantumAccelerator.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
@@ -21,29 +23,50 @@ contract Marketplace is
 {
     using SafeMathUpgradeable for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
 
     struct Information {
         address payable seller;
+        address buyer;
+        address nftContract;
+        uint256 tokenId;
         address currency;
         uint256 price;
     }
 
+    CountersUpgradeable.Counter private _itemId;
+    mapping(address => bool) private _operators;
     QuantumAccelerator public quantumAccelerator;
+    address[] public listOperators;
     address[] public listCurrencyWhitelist;
+    address[] public listNFTContractWhitelist;
     mapping(address => bool) private _currencyWhitelist;
+    mapping(address => bool) private _NFTContractWhitelist;
     mapping(uint256 => Information) private _informationOf;
+    uint256[] private _listNFTOnSell;
     mapping(address => bool) private _walletCanSell;
     bool public isEveryoneCanSell;
     mapping(address => uint256[]) private _listNFTOnSellOf;
     address public receiveFeeWallet;
     mapping(address => uint256) private _priceMintNFT;
+    uint256 public maxNFTCanMint;
+    uint256 public supplyNFTMinted;
 
-    event NewNFT(uint256 tokenId, address currency, uint256 price);
+    event Operator(address operator, bool isOperator);
+    event NewNFT(
+        uint256 itemId,
+        address nftContract,
+        uint256 tokenId,
+        address currency,
+        uint256 price
+    );
     event GetNFTBack(uint256 tokenId);
     event UpdatePrice(uint256 tokenId, uint256 newPrice);
     event NFTSold(
-        uint256 tokenId,
+        uint256 itemId,
         address buyer,
+        address nftContract,
+        uint256 tokenId,
         address currency,
         uint256 price
     );
@@ -51,9 +74,11 @@ contract Marketplace is
     event EveryoneCanSell(bool canSell);
     event NFT721Contract(address NFT721Addr);
     event PaymentCurrency(address currency, bool accepted);
+    event NFTContractWhitelist(address nftContract, bool accepted);
     event PriceMintNFT(address currency, uint256 price);
     event BuyNFTMint(address buyer, address currency, uint256 price);
     event ReceiveFeeWallet(address wallet);
+    event MaxNFTCanMint(uint256 maxSupply);
 
     function initialize() public initializer {
         __UUPSUpgradeable_init();
@@ -73,29 +98,48 @@ contract Marketplace is
         _unpause();
     }
 
-    modifier onlyOwnerToken(uint256 tokenId) {
-        require(
-            address(this) == quantumAccelerator.ownerOf(tokenId),
-            "token-not-sell"
-        );
-        require(
-            msg.sender == _informationOf[tokenId].seller,
-            "not-owner-token"
-        );
+    modifier onlyOperator() {
+        require(_operators[_msgSender()]);
         _;
     }
 
-    function getNFTInfo(uint256 tokenId)
+    modifier onlyOwnerToken(uint256 itemId) {
+        Information memory info = _informationOf[itemId];
+        require(
+            address(this) ==
+                ERC721Upgradeable(info.nftContract).ownerOf(info.tokenId),
+            "token-not-sell"
+        );
+        require(msg.sender == info.seller, "not-owner-token");
+        _;
+    }
+
+    modifier isTokenOnMarketplace(uint256 itemId) {
+        Information memory info = _informationOf[itemId];
+        require(info.seller != address(0), "token-not-exists");
+        require(info.buyer == address(0), "token-bought");
+        _;
+    }
+
+    function getNFTInfo(uint256 itemId)
         public
         view
         returns (
             address seller,
+            address nftContract,
+            uint256 tokenId,
             address currency,
             uint256 price
         )
     {
-        Information memory info = _informationOf[tokenId];
-        return (info.seller, info.currency, info.price);
+        Information memory info = _informationOf[itemId];
+        return (
+            info.seller,
+            info.nftContract,
+            info.tokenId,
+            info.currency,
+            info.price
+        );
     }
 
     function getNFTsOnSellOf(address seller)
@@ -106,6 +150,10 @@ contract Marketplace is
         return _listNFTOnSellOf[seller];
     }
 
+    function getNFTsOnSell() public view returns (uint256[] memory) {
+        return _listNFTOnSell;
+    }
+
     function getPriceMintNFT(address currency) public view returns (uint256) {
         return _priceMintNFT[currency];
     }
@@ -114,11 +162,43 @@ contract Marketplace is
         return listCurrencyWhitelist;
     }
 
+    function getListNFTContractWhitelist()
+        public
+        view
+        returns (address[] memory)
+    {
+        return listNFTContractWhitelist;
+    }
+
     function checkCurrency(address currency) public view returns (bool) {
         return (_currencyWhitelist[currency]);
     }
 
-    function setNFT721Address(address nft721Address) public onlyOwner {
+    function checkNFTContract(address nftContract) public view returns (bool) {
+        return (_NFTContractWhitelist[nftContract]);
+    }
+
+    function setOperator(address operator, bool isOperator) public onlyOwner {
+        _operators[operator] = isOperator;
+
+        (bool isOperatorBefore, uint256 indexInArr) = checkExistsInArray(
+            listOperators,
+            operator
+        );
+
+        if (isOperator && !isOperatorBefore) {
+            listOperators.push(operator);
+        }
+        if (!isOperator && isOperatorBefore) {
+            removeOutOfArray(listOperators, indexInArr);
+        }
+        emit Operator(operator, isOperator);
+    }
+
+    function setQuantumAcceleratorAddress(address nft721Address)
+        public
+        onlyOperator
+    {
         require(nft721Address != address(0) && nft721Address != address(this));
         quantumAccelerator = QuantumAccelerator(nft721Address);
         emit NFT721Contract(nft721Address);
@@ -126,7 +206,7 @@ contract Marketplace is
 
     function setPaymentCurrency(address currency, bool accepted)
         public
-        onlyOwner
+        onlyOperator
     {
         _currencyWhitelist[currency] = accepted;
 
@@ -145,18 +225,43 @@ contract Marketplace is
         emit PaymentCurrency(currency, accepted);
     }
 
-    function setWalletCanSell(address wallet, bool isSeller) public onlyOwner {
+    function setNFTContractWhitelist(address nftContract, bool accepted)
+        public
+        onlyOperator
+    {
+        _NFTContractWhitelist[nftContract] = accepted;
+
+        (bool isAcceptedBefore, uint256 indexInArr) = checkExistsInArray(
+            listNFTContractWhitelist,
+            nftContract
+        );
+
+        if (accepted && !isAcceptedBefore) {
+            listNFTContractWhitelist.push(nftContract);
+        }
+        if (!accepted && isAcceptedBefore) {
+            removeOutOfArray(listNFTContractWhitelist, indexInArr);
+        }
+
+        emit NFTContractWhitelist(nftContract, accepted);
+    }
+
+    function setWalletCanSell(address wallet, bool isSeller)
+        public
+        onlyOperator
+    {
         _walletCanSell[wallet] = isSeller;
         emit WalletCanSell(wallet, isSeller);
     }
 
-    function setEveryoneCanSell(bool canSell) public onlyOwner {
+    function setEveryoneCanSell(bool canSell) public onlyOperator {
         isEveryoneCanSell = canSell;
         emit EveryoneCanSell(isEveryoneCanSell);
     }
 
     // The owner of an NFT pushes their NFT to our platform for sale
     function sellNFT(
+        address nftContract,
         uint256 tokenId,
         address currency,
         uint256 price
@@ -165,132 +270,159 @@ contract Marketplace is
             require(_walletCanSell[msg.sender], "can-not-sell");
         }
         require(
-            msg.sender == quantumAccelerator.ownerOf(tokenId),
+            _NFTContractWhitelist[nftContract],
+            "nft-contract-not-whitelist"
+        );
+        require(
+            msg.sender == ERC721Upgradeable(nftContract).ownerOf(tokenId),
             "not-owner-token"
         );
         require(
-            quantumAccelerator.getApproved(tokenId) == address(this),
+            ERC721Upgradeable(nftContract).getApproved(tokenId) ==
+                address(this),
             "not-approval"
         );
         require(_currencyWhitelist[currency], "currency-invalid");
-        require(
-            _informationOf[tokenId].price == 0 && price > 0,
-            "price-invalid"
-        );
-        _informationOf[tokenId] = Information(
+        require(price > 0, "price-invalid");
+
+        uint256 itemId = _itemId.current();
+        _informationOf[itemId] = Information(
             payable(msg.sender),
+            address(0),
+            nftContract,
+            tokenId,
             currency,
             price
         );
-        quantumAccelerator.safeTransferFrom(msg.sender, address(this), tokenId);
 
-        _listNFTOnSellOf[msg.sender].push(tokenId);
-        emit NewNFT(tokenId, currency, price);
+        ERC721Upgradeable(nftContract).safeTransferFrom(
+            msg.sender,
+            address(this),
+            tokenId
+        );
+
+        _listNFTOnSellOf[msg.sender].push(itemId);
+        _listNFTOnSell.push(itemId);
+
+        _itemId.increment();
+        emit NewNFT(itemId, nftContract, tokenId, currency, price);
     }
 
     // The owner of an NFT takes his NFT back
-    function getNFTBack(uint256 tokenId)
+    function getNFTBack(uint256 itemId)
         public
         whenNotPaused
-        onlyOwnerToken(tokenId)
+        onlyOwnerToken(itemId)
+        isTokenOnMarketplace(itemId)
     {
-        require(_informationOf[tokenId].price > 0, "token-not-exists");
-        delete _informationOf[tokenId];
-        quantumAccelerator.safeTransferFrom(address(this), msg.sender, tokenId);
+        Information storage info = _informationOf[itemId];
 
+        ERC721Upgradeable(info.nftContract).safeTransferFrom(
+            address(this),
+            info.seller,
+            info.tokenId
+        );
+
+        info.buyer = info.seller;
+
+        //remove itemId out of list on sell of seller
         uint256 indexTokenInArr = getIndexInArray(
             _listNFTOnSellOf[msg.sender],
-            tokenId
+            itemId
         );
         _listNFTOnSellOf[msg.sender] = removeArrayByIndex(
             _listNFTOnSellOf[msg.sender],
             indexTokenInArr
         );
-        emit GetNFTBack(tokenId);
+
+        //remove itemId out of list on sell of marketplace
+        uint256 indexItemIdInArr = getIndexInArray(_listNFTOnSell, itemId);
+        _listNFTOnSell = removeArrayByIndex(_listNFTOnSell, indexItemIdInArr);
+
+        emit GetNFTBack(itemId);
     }
 
     // The owner wants to update the price of his NFT
-    function updatePrice(uint256 tokenId, uint256 newPrice)
+    function updatePrice(uint256 itemId, uint256 newPrice)
         public
         whenNotPaused
-        onlyOwnerToken(tokenId)
+        onlyOwnerToken(itemId)
+        isTokenOnMarketplace(itemId)
     {
-        require(
-            _informationOf[tokenId].price > 0 && newPrice > 0,
-            "price-invalid"
-        );
-        _informationOf[tokenId] = Information(
-            _informationOf[tokenId].seller,
-            _informationOf[tokenId].currency,
-            newPrice
-        );
-        emit UpdatePrice(tokenId, newPrice);
+        Information storage info = _informationOf[itemId];
+        require(newPrice > 0, "price-invalid");
+        info.price = newPrice;
+        emit UpdatePrice(itemId, newPrice);
     }
 
     // A person wants to purchase an NFT from our platform
-    function purchaseNFT(uint256 tokenId) public payable whenNotPaused {
+    function purchaseNFT(uint256 itemId)
+        public
+        payable
+        whenNotPaused
+        isTokenOnMarketplace(itemId)
+    {
+        Information storage info = _informationOf[itemId];
         require(
-            msg.sender != address(this) &&
-                msg.sender != _informationOf[tokenId].seller,
+            msg.sender != address(this) && msg.sender != info.seller,
             "caller-invalid"
         );
-        require(
-            address(this) == quantumAccelerator.ownerOf(tokenId),
-            "token-not-sell"
-        );
-        require(_informationOf[tokenId].price > 0, "price-token-invalid");
-        address payable seller = _informationOf[tokenId].seller;
-        require(msg.sender != seller, "owner-can-not-buy");
-        if (_informationOf[tokenId].currency == address(0)) {
+        require(info.price > 0, "price-token-invalid");
+        address payable seller = info.seller;
+
+        if (info.currency == address(0)) {
             // Native currency(ETH/BNB/MATIC) payment
-            require(
-                msg.value == _informationOf[tokenId].price,
-                "value-invalid"
-            );
+            require(msg.value == info.price, "value-invalid");
             (bool success, ) = seller.call{value: msg.value}("");
             require(success, "fail-trans");
         } else {
             // ERC20 handle
             IERC20Upgradeable currencyContract = IERC20Upgradeable(
-                _informationOf[tokenId].currency
+                info.currency
             );
-            require(
-                currencyContract.balanceOf(msg.sender) >=
-                    _informationOf[tokenId].price
-            );
+            require(currencyContract.balanceOf(msg.sender) >= info.price);
             require(
                 currencyContract.allowance(msg.sender, address(this)) >=
-                    _informationOf[tokenId].price
+                    info.price
             );
-            currencyContract.safeTransferFrom(
-                msg.sender,
-                seller,
-                _informationOf[tokenId].price
-            );
+            currencyContract.safeTransferFrom(msg.sender, seller, info.price);
         }
 
-        quantumAccelerator.safeTransferFrom(address(this), msg.sender, tokenId);
+        ERC721Upgradeable(info.nftContract).safeTransferFrom(
+            address(this),
+            msg.sender,
+            info.tokenId
+        );
 
+        info.buyer = msg.sender;
+
+        //remove itemId out of list on sell of seller
         uint256 indexTokenInArr = getIndexInArray(
             _listNFTOnSellOf[seller],
-            tokenId
+            itemId
         );
         _listNFTOnSellOf[seller] = removeArrayByIndex(
             _listNFTOnSellOf[seller],
             indexTokenInArr
         );
 
+        //remove itemId out of list on sell of marketplace
+        uint256 indexItemIdInArr = getIndexInArray(_listNFTOnSell, itemId);
+        _listNFTOnSell = removeArrayByIndex(_listNFTOnSell, indexItemIdInArr);
+
         emit NFTSold(
-            tokenId,
-            msg.sender,
-            _informationOf[tokenId].currency,
-            _informationOf[tokenId].price
+            itemId,
+            info.buyer,
+            info.nftContract,
+            info.tokenId,
+            info.currency,
+            info.price
         );
-        delete _informationOf[tokenId];
     }
 
     function buyNFTMint(address currency) public whenNotPaused {
-        require(quantumAccelerator.totalSupply() < 1111, "out-of-times-to-buy");
+        require(maxNFTCanMint != 0, "max-supply-have-not-set");
+        require(supplyNFTMinted < maxNFTCanMint, "out-of-times-to-buy");
         require(
             receiveFeeWallet != address(0),
             "have-not-setup-recevei-fee-wallet"
@@ -313,10 +445,21 @@ contract Marketplace is
 
         quantumAccelerator.safeMint(msg.sender);
 
+        supplyNFTMinted++;
+
         emit BuyNFTMint(msg.sender, currency, _priceMintNFT[currency]);
     }
 
-    function setPriceMintNFT(address currency, uint256 price) public onlyOwner {
+    function setMaxNFTCanMint(uint256 maxSupply) public onlyOperator {
+        require(maxSupply > 0, "max-supply-invalid");
+        maxNFTCanMint = maxSupply;
+        emit MaxNFTCanMint(maxNFTCanMint);
+    }
+
+    function setPriceMintNFT(address currency, uint256 price)
+        public
+        onlyOperator
+    {
         require(_currencyWhitelist[currency], "not-whitelist");
         _priceMintNFT[currency] = price;
         emit PriceMintNFT(currency, price);

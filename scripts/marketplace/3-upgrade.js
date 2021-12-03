@@ -2,9 +2,9 @@ require('@nomiclabs/hardhat-ethers');
 require('@openzeppelin/hardhat-upgrades');
 
 const hre = require("hardhat");
-const PROXY_ADDRESS = "0x31E34eD544De1A049905D9b3e0Dd3cAD1137F3eA";
-const CONTRACT_NAME_V1 = "Vesting";
-const CONTRACT_NAME_V2 = "Vesting";
+const PROXY_ADDRESS = "0x720B26220a97CFECBa74d98802EE264D7cc6cb39";
+const CONTRACT_NAME_V1 = "Marketplace";
+const CONTRACT_NAME_V2 = "Marketplace";
 
 async function main() {
     const [deployer] = await hre.ethers.getSigners();
