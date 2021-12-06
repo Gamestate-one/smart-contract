@@ -51,6 +51,8 @@ contract Marketplace is
     mapping(address => uint256) private _priceMintNFT;
     uint256 public maxNFTCanMint;
     uint256 public supplyNFTMinted;
+    uint256 private _fee;
+    uint256 private _percent;
 
     event Operator(address operator, bool isOperator);
     event NewNFT(
@@ -79,6 +81,7 @@ contract Marketplace is
     event BuyNFTMint(address buyer, address currency, uint256 price);
     event ReceiveFeeWallet(address wallet);
     event MaxNFTCanMint(uint256 maxSupply);
+    event FeePercent(uint256 fee, uint256 percent);
 
     function initialize() public initializer {
         __UUPSUpgradeable_init();
@@ -86,6 +89,9 @@ contract Marketplace is
         __Ownable_init();
         __Pausable_init();
         __ReentrancyGuard_init();
+
+        _fee = 0;
+        _percent = 1;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -126,6 +132,7 @@ contract Marketplace is
         view
         returns (
             address seller,
+            address buyer,
             address nftContract,
             uint256 tokenId,
             address currency,
@@ -135,6 +142,7 @@ contract Marketplace is
         Information memory info = _informationOf[itemId];
         return (
             info.seller,
+            info.buyer,
             info.nftContract,
             info.tokenId,
             info.currency,
@@ -168,6 +176,15 @@ contract Marketplace is
         returns (address[] memory)
     {
         return listNFTContractWhitelist;
+    }
+
+    function getFeePercent()
+        public
+        view
+        returns (uint256 fee, uint256 percent)
+    {
+        fee = _fee;
+        percent = _percent;
     }
 
     function checkCurrency(address currency) public view returns (bool) {
@@ -370,10 +387,18 @@ contract Marketplace is
         require(info.price > 0, "price-token-invalid");
         address payable seller = info.seller;
 
+        uint256 realPrice = info.price;
+        uint256 feePrice = realPrice.mul(_fee).div(_percent);
+        uint256 sellerReceive = realPrice.sub(feePrice);
+
         if (info.currency == address(0)) {
             // Native currency(ETH/BNB/MATIC) payment
             require(msg.value == info.price, "value-invalid");
-            (bool success, ) = seller.call{value: msg.value}("");
+            (bool successTransFee, ) = receiveFeeWallet.call{value: feePrice}(
+                ""
+            );
+            require(successTransFee, "fail-transfer");
+            (bool success, ) = seller.call{value: sellerReceive}("");
             require(success, "fail-trans");
         } else {
             // ERC20 handle
@@ -385,7 +410,16 @@ contract Marketplace is
                 currencyContract.allowance(msg.sender, address(this)) >=
                     info.price
             );
-            currencyContract.safeTransferFrom(msg.sender, seller, info.price);
+            currencyContract.safeTransferFrom(
+                msg.sender,
+                receiveFeeWallet,
+                feePrice
+            );
+            currencyContract.safeTransferFrom(
+                msg.sender,
+                seller,
+                sellerReceive
+            );
         }
 
         ERC721Upgradeable(info.nftContract).safeTransferFrom(
@@ -469,6 +503,22 @@ contract Marketplace is
         require(wallet != address(0), "wallet-invalid");
         receiveFeeWallet = wallet;
         emit ReceiveFeeWallet(receiveFeeWallet);
+    }
+
+    /**
+    @dev set fee for each transaction on marketplace
+    feePercent = fee/percent
+    example: - 4% is fee = 4, percent = 100
+             - 0.04 if fee = 4, percent = 10000
+             - not set fee is fee = 0, percent = 1
+    */
+    function setFeePercent(uint256 fee, uint256 percent) public onlyOperator {
+        _fee = fee;
+        if (fee == 0) {
+            require(percent == 1, "if-not-set-fee-require-percent-is-1");
+        }
+        _percent = percent;
+        emit FeePercent(fee, percent);
     }
 
     function getIndexInArray(uint256[] memory listNFT, uint256 tokenId)
