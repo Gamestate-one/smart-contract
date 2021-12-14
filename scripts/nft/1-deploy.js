@@ -10,8 +10,8 @@ async function main() {
 
     // Provide constructor parameters here
     const nft = {
-        name: "Quantum Accelerator",
-        symbol: "QA"
+        name: "NghiaNgu",
+        symbol: "NghiaNgu"
     }
 
     const contract = await factory.deploy(

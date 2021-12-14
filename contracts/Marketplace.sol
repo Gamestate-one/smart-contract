@@ -45,7 +45,9 @@ contract Marketplace is
     mapping(uint256 => Information) private _informationOf;
     uint256[] private _listNFTOnSell;
     mapping(address => bool) private _walletCanSell;
+    mapping(address => bool) private _walletCanBuyNFTMint;
     bool public isEveryoneCanSell;
+    bool public isEveryoneCanBuyNFTMint;
     mapping(address => uint256[]) private _listNFTOnSellOf;
     address public receiveFeeWallet;
     mapping(address => uint256) private _priceMintNFT;
@@ -74,6 +76,8 @@ contract Marketplace is
     );
     event WalletCanSell(address wallet, bool isSeller);
     event EveryoneCanSell(bool canSell);
+    event WalletCanBuyNFTMint(address wallet, bool isBuyer);
+    event EveryoneCanBuyNFTMint(bool canBuy);
     event NFT721Contract(address NFT721Addr);
     event PaymentCurrency(address currency, bool accepted);
     event NFTContractWhitelist(address nftContract, bool accepted);
@@ -455,6 +459,9 @@ contract Marketplace is
     }
 
     function buyNFTMint(address currency) public whenNotPaused {
+        if (!isEveryoneCanBuyNFTMint) {
+            require(_walletCanBuyNFTMint[msg.sender], "not-whitelist-to-buy");
+        }
         require(maxNFTCanMint != 0, "max-supply-have-not-set");
         require(supplyNFTMinted < maxNFTCanMint, "out-of-times-to-buy");
         require(
@@ -481,6 +488,8 @@ contract Marketplace is
 
         supplyNFTMinted++;
 
+        _walletCanBuyNFTMint[msg.sender] = false;
+
         emit BuyNFTMint(msg.sender, currency, _priceMintNFT[currency]);
     }
 
@@ -503,6 +512,19 @@ contract Marketplace is
         require(wallet != address(0), "wallet-invalid");
         receiveFeeWallet = wallet;
         emit ReceiveFeeWallet(receiveFeeWallet);
+    }
+
+    function setWalletCanBuyNFTMint(address wallet, bool isBuyer)
+        public
+        onlyOperator
+    {
+        _walletCanBuyNFTMint[wallet] = isBuyer;
+        emit WalletCanBuyNFTMint(wallet, isBuyer);
+    }
+
+    function setEveryoneCanBuyNFTMint(bool canBuy) public onlyOperator {
+        isEveryoneCanBuyNFTMint = canBuy;
+        emit EveryoneCanBuyNFTMint(isEveryoneCanBuyNFTMint);
     }
 
     /**
