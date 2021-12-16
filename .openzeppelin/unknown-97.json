@@ -5,6 +5,11 @@
       "address": "0xfd4D218C72b1B613100462d50ecF1126c0cd338f",
       "txHash": "0x665d91a6b0f81604b1e6faac4ddeeddf95513364e19166b7874f0d96049821b8",
       "kind": "uups"
+    },
+    {
+      "address": "0x8c4bfE1962982b0d54116a8a6e1731EA2f58577B",
+      "txHash": "0xef59e7b66d602a8aa49a40008463e2803c8d6f2bc32fb5658606cc9ff6f5999c",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -286,6 +291,144 @@
           },
           "t_array(t_uint256)49_storage": {
             "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "507a31a6568cd1827507e12e40bcb61c6f35d4e8748c2df2a7ced7f43347ea68": {
+      "address": "0x0Cd83C2b3506888Fc7908Da65c576491DdFe9251",
+      "txHash": "0x408365d40f000f4dedc06c13491d46980eb9c5330794fb45d70f0015398a27bc",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:26"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\ERC1967\\ERC1967UpgradeUpgradeable.sol:214"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\proxy\\utils\\UUPSUpgradeable.sol:80"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:30"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:21"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:77"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\PausableUpgradeable.sol:28"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\PausableUpgradeable.sol:96"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin\\contracts-upgradeable\\security\\ReentrancyGuardUpgradeable.sol:67"
+          },
+          {
+            "contract": "Vesting",
+            "label": "gamestateToken",
+            "type": "t_contract(GamestateToken)7197",
+            "src": "contracts\\Vesting.sol:32"
+          },
+          {
+            "contract": "Vesting",
+            "label": "vests",
+            "type": "t_mapping(t_address,t_struct(VestingInformation)9569_storage)",
+            "src": "contracts\\Vesting.sol:33"
+          }
+        ],
+        "types": {
+          "t_contract(GamestateToken)7197": {
+            "label": "contract GamestateToken"
+          },
+          "t_mapping(t_address,t_struct(VestingInformation)9569_storage)": {
+            "label": "mapping(address => struct Vesting.VestingInformation)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_struct(VestingInformation)9569_storage": {
+            "label": "struct Vesting.VestingInformation",
+            "members": [
+              {
+                "label": "startTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "endTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "maxSupplyClaim",
+                "type": "t_uint256"
+              },
+              {
+                "label": "timeIncreaseSupplyCanClaim",
+                "type": "t_uint256"
+              },
+              {
+                "label": "supplyIncrease",
+                "type": "t_uint256"
+              },
+              {
+                "label": "totalClaimed",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_bool": {
+            "label": "bool"
           },
           "t_array(t_uint256)50_storage": {
             "label": "uint256[50]"

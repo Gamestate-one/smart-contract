@@ -493,9 +493,9 @@ contract Marketplace is
         emit BuyNFTMint(msg.sender, currency, _priceMintNFT[currency]);
     }
 
-    function setMaxNFTCanMint(uint256 maxSupply) public onlyOperator {
-        require(maxSupply > 0, "max-supply-invalid");
-        maxNFTCanMint = maxSupply;
+    function addSupplyNFTCanMint(uint256 supply) public onlyOperator {
+        require(supply > 0, "max-supply-invalid");
+        maxNFTCanMint = maxNFTCanMint.add(supply);
         emit MaxNFTCanMint(maxNFTCanMint);
     }
 

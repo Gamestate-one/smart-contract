@@ -11,7 +11,7 @@ async function main() {
     const factory = await hre.ethers.getContractFactory(CONTRACT_NAME);
     const contract = factory.attach(PROXY_ADDRESS);
     const supply = 1111
-    await contract.setMaxNFTCanMint(supply);
+    await contract.addSupplyNFTCanMint(supply);
     console.log("Max supply mint:", supply);
 }
 

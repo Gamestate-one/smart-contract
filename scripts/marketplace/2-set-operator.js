@@ -12,7 +12,7 @@ async function main() {
     const contract = factory.attach(PROXY_ADDRESS);
     const address = "0x8124c6Af26f52631C9425679e422f84a2E176322";
     await contract.setOperator(address, true);
-    console.log("Set operator success for: ", nftContract);
+    console.log("Set operator success for: ", address);
 }
 
 main().then(() => {
