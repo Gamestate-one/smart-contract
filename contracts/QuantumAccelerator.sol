@@ -21,30 +21,44 @@ contract QuantumAccelerator is
 
     Counters.Counter private _tokenIdCounter;
     mapping(address => bool) private _operators;
+    string private baseURI;
+    address[] public listOperators;
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
     {}
 
     event Operator(address operator, bool isOperator);
-    event MintNFT(address recipient, uint256 tokenId);
+    event Minted(address recipient, uint256 tokenId);
+    event BaseURI(string uri);
 
     modifier onlyOperator() {
         require(_operators[_msgSender()]);
         _;
     }
 
-    function setOperator(address operator, bool isOperator) external onlyOwner {
+    function setOperator(address operator, bool isOperator) public onlyOwner {
         _operators[operator] = isOperator;
+
+        (bool isOperatorBefore, uint256 indexInArr) = checkExistsInArray(
+            listOperators,
+            operator
+        );
+
+        if (isOperator && !isOperatorBefore) {
+            listOperators.push(operator);
+        }
+        if (!isOperator && isOperatorBefore) {
+            removeOutOfArray(listOperators, indexInArr);
+        }
         emit Operator(operator, isOperator);
     }
 
-    function _safeMint(address to, string memory uri) public onlyOperator {
+    function safeMint(address to) public onlyOperator {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-        emit MintNFT(to, tokenId);
+        emit Minted(to, tokenId);
     }
 
     function getOwnedTokenIds(address _address)
@@ -60,6 +74,10 @@ contract QuantumAccelerator is
                 ownedtokenIds[i] = tokenOfOwnerByIndex(_address, i);
             return ownedtokenIds;
         }
+    }
+
+    function getListOperators() public view returns (address[] memory) {
+        return listOperators;
     }
 
     function _beforeTokenTransfer(
@@ -95,5 +113,50 @@ contract QuantumAccelerator is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * Override isApprovedForAll to auto-approve OS's proxy contract
+     */
+    function isApprovedForAll(address _owner, address _operator)
+        public
+        view
+        override
+        returns (bool isOperator)
+    {
+        // if OpenSea's ERC721 Proxy Address is detected, auto-return true (Polygon mainnet)
+        if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
+            return true;
+        }
+
+        // otherwise, use the default ERC721.isApprovedForAll()
+        return ERC721.isApprovedForAll(_owner, _operator);
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
+
+    function setBaseURI(string memory uri) public onlyOwner {
+        baseURI = uri;
+        emit BaseURI(uri);
+    }
+
+    function checkExistsInArray(address[] memory arr, address _address)
+        internal
+        pure
+        returns (bool isExist, uint256 index)
+    {
+        for (uint256 i = 0; i < arr.length; i++) {
+            if (arr[i] == _address) {
+                isExist = true;
+                index = i;
+            }
+        }
+    }
+
+    function removeOutOfArray(address[] storage arr, uint256 index) internal {
+        arr[index] = arr[arr.length - 1];
+        arr.pop();
     }
 }
